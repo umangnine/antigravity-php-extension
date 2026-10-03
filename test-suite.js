@@ -47,10 +47,25 @@ describe('Antigravity PHP Extension - Test Suite', () => {
         return [code];
       },
       insertBefore: function (inside, before, insert, root) {
-        root = root || (this.languages ? this.languages[inside] : this[inside]) || {};
-        for (const [k, v] of Object.entries(insert)) {
-          root[k] = v;
+        root = root || this.languages;
+        var grammar = root ? root[inside] : null;
+        var ret = {};
+        for (var token in grammar) {
+          if (grammar.hasOwnProperty(token)) {
+            if (token === before) {
+              for (var newToken in insert) {
+                if (insert.hasOwnProperty(newToken)) {
+                  ret[newToken] = insert[newToken];
+                }
+              }
+            }
+            if (!insert.hasOwnProperty(token)) {
+              ret[token] = grammar[token];
+            }
+          }
         }
+        if (root) root[inside] = ret;
+        return ret;
       },
     };
 
@@ -73,6 +88,7 @@ describe('Antigravity PHP Extension - Test Suite', () => {
 
     // Verify Prism.languages.php was installed
     assert.ok(sandbox.window.Prism.languages.php, 'Prism.languages.php must be defined');
+    assert.strictEqual(sandbox.window.Prism.languages.php.php, undefined, 'Prism.languages.php must NOT contain nested php property');
     assert.ok(sandbox.window.Prism.languages['markup-templating'], 'markup-templating must be defined');
     assert.ok(sandbox.window.Prism.languages.phtml, 'phtml alias must be defined');
     assert.ok(sandbox.window.Prism.languages.php8, 'php8 alias must be defined');
@@ -119,6 +135,9 @@ describe('Antigravity PHP Extension - Test Suite', () => {
           let greedy = !!patternObj.greedy;
           let alias = patternObj.alias;
           let pattern = patternObj.pattern || patternObj;
+          if (!pattern || typeof pattern.exec !== 'function') {
+            throw new TypeError(`pattern.exec is not a function for token '${token}'`);
+          }
 
           let regex = new RegExp(pattern.source, pattern.flags || '');
 
@@ -174,10 +193,11 @@ describe('Antigravity PHP Extension - Test Suite', () => {
     };
 
     languages.insertBefore = function (inside, before, insert, root) {
-      root = root || this[inside] || languages[inside] || {};
+      root = root || languages;
+      const targetGrammar = root ? root[inside] : null;
       const grammar = {};
-      for (const token in root) {
-        if (root.hasOwnProperty(token)) {
+      for (const token in targetGrammar) {
+        if (targetGrammar.hasOwnProperty(token)) {
           if (token === before) {
             for (const newToken in insert) {
               if (insert.hasOwnProperty(newToken)) {
@@ -186,16 +206,12 @@ describe('Antigravity PHP Extension - Test Suite', () => {
             }
           }
           if (!insert.hasOwnProperty(token)) {
-            grammar[token] = root[token];
+            grammar[token] = targetGrammar[token];
           }
         }
       }
-      for (const key in grammar) {
-        if (grammar.hasOwnProperty(key)) {
-          root[key] = grammar[key];
-        }
-      }
-      return root;
+      if (root) root[inside] = grammar;
+      return grammar;
     };
 
     const Prism = {
@@ -234,10 +250,16 @@ describe('Antigravity PHP Extension - Test Suite', () => {
 
     const php = sandbox.window.Prism.languages.php;
     assert.ok(php, 'PHP grammar must be registered');
+    assert.strictEqual(php.php, undefined, 'PHP grammar must NOT contain invalid nested php property');
 
     // Test tokenization of PHP code
     const phpCode = '<?php class Order { public string $id; function getId() { return $this->id; } }';
     const tokens = sandbox.window.Prism.highlight(phpCode, php, 'php');
+
+    // Test mixed HTML and PHP templating
+    const mixedCode = '<div class="test"><?php echo "Hello World"; ?></div>';
+    const mixedTokens = sandbox.window.Prism.highlight(mixedCode, php, 'php');
+    assert.ok(mixedTokens.length > 0, 'Mixed HTML/PHP template must highlight cleanly without errors');
 
     function findTokens(list, type) {
       const found = [];

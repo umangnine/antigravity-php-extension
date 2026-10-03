@@ -14,7 +14,7 @@ A portable, self-contained extension bundle to enable and maintain **PHP Syntax 
 ### Method 1: Git Clone (Quickest)
 
 ```powershell
-git clone https://github.com/umangkathiyara/antigravity-php-extension.git
+git clone https://github.com/umangnine/antigravity-php-extension.git
 cd antigravity-php-extension
 powershell -ExecutionPolicy Bypass -File .\install.ps1
 ```
@@ -22,7 +22,7 @@ powershell -ExecutionPolicy Bypass -File .\install.ps1
 
 ### Method 2: Download Portable Release (Zero npm / Offline)
 
-1. Download the latest `antigravity-php-extension-portable.zip` from [Releases](https://github.com/umangkathiyara/antigravity-php-extension/releases).
+1. Download the latest `antigravity-php-extension-portable.zip` from [Releases](https://github.com/umangnine/antigravity-php-extension/releases).
 2. Extract the ZIP anywhere on your system.
 3. Right-click `install.ps1` -> **Run with PowerShell** (or run `.\install.ps1` from a terminal).
 4. No internet connection or npm downloads required—everything is self-contained.
@@ -197,5 +197,5 @@ extensions\                     CDP WebSocket;                   Hooks dist/prel
 ## 📄 License & Attribution
 
 - **Author**: **Umang Kathiyara** (<umangnine@gmail.com>)
-- **Repository**: [https://github.com/umangkathiyara/antigravity-php-extension](https://github.com/umangkathiyara/antigravity-php-extension)
+- **Repository**: [https://github.com/umangnine/antigravity-php-extension](https://github.com/umangnine/antigravity-php-extension)
 - **License**: Released under the [MIT License](LICENSE).

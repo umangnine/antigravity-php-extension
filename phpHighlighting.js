@@ -7,7 +7,13 @@
  */
 (function () {
   if (typeof window === 'undefined') return;
-  if (window.__antigravity_php_syntax_installed && window.Prism && window.Prism.languages && window.Prism.languages.php) {
+  if (
+    window.__antigravity_php_syntax_installed &&
+    window.Prism &&
+    window.Prism.languages &&
+    window.Prism.languages.php &&
+    !window.Prism.languages.php.php
+  ) {
     return;
   }
 
@@ -35,7 +41,7 @@
 
   function installPhpGrammar(Prism) {
     if (!Prism || !Prism.languages) return false;
-    if (Prism.languages.php && window.__antigravity_php_syntax_installed) {
+    if (Prism.languages.php && window.__antigravity_php_syntax_installed && !Prism.languages.php.php) {
       highlightExistingPhpBlocks();
       return true;
     }
@@ -83,9 +89,15 @@
                       if (index > -1) {
                         ++j;
                         var before = s.substring(0, index);
+                        var tokenizedContent = t;
+                        try {
+                          tokenizedContent = Prism.tokenize(t, env.grammar);
+                        } catch (_tokErr) {
+                          tokenizedContent = t;
+                        }
                         var middle = new Prism.Token(
                           language,
-                          Prism.tokenize(t, env.grammar),
+                          tokenizedContent,
                           'language-' + language,
                           t
                         );
@@ -280,18 +292,28 @@
         var inserted = false;
         if (insertBeforeFn) {
           try {
-            insertBeforeFn.call(Prism.languages, 'php', 'variable', extras, Prism.languages.php);
+            var newGrammar = insertBeforeFn.call(Prism.languages, 'php', 'variable', extras);
+            if (newGrammar && typeof newGrammar === 'object') {
+              Prism.languages.php = newGrammar;
+            }
             inserted = true;
           } catch (e) {}
         }
         if (!inserted) {
           Object.assign(Prism.languages.php, extras);
         }
+        // Strict cleanup: ensure no invalid nested 'php' property exists on grammar
+        if (Prism.languages.php && Prism.languages.php.php) {
+          delete Prism.languages.php.php;
+        }
 
         // 4. Register language aliases
         var aliases = ['phtml', 'php3', 'php4', 'php5', 'php6', 'php7', 'php8', 'phps'];
         for (var i = 0; i < aliases.length; i++) {
           Prism.languages[aliases[i]] = Prism.languages.php;
+          if (Prism.languages[aliases[i]] && Prism.languages[aliases[i]].php) {
+            delete Prism.languages[aliases[i]].php;
+          }
         }
 
         // 5. Register markup-templating hooks for PHP and aliases
@@ -312,9 +334,11 @@
               if (!env || !env.code) return;
               if (env.language !== 'php' && aliases.indexOf(env.language) === -1) return;
               if (!/<\?/.test(env.code)) return;
-              if (Prism.languages['markup-templating']) {
-                Prism.languages['markup-templating'].buildPlaceholders(env, 'php', phpPattern);
-              }
+              try {
+                if (Prism.languages['markup-templating']) {
+                  Prism.languages['markup-templating'].buildPlaceholders(env, 'php', phpPattern);
+                }
+              } catch (_e) {}
             };
             beforeHook.__antigravity_php = true;
             Prism.hooks.add('before-tokenize', beforeHook);
@@ -322,9 +346,11 @@
             var afterHook = function (env) {
               if (!env) return;
               if (env.language !== 'php' && aliases.indexOf(env.language) === -1) return;
-              if (Prism.languages['markup-templating']) {
-                Prism.languages['markup-templating'].tokenizePlaceholders(env, 'php');
-              }
+              try {
+                if (Prism.languages['markup-templating']) {
+                  Prism.languages['markup-templating'].tokenizePlaceholders(env, 'php');
+                }
+              } catch (_e) {}
             };
             afterHook.__antigravity_php = true;
             Prism.hooks.add('after-tokenize', afterHook);
