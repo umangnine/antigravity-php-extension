@@ -1,0 +1,23 @@
+{
+  "name": "antigravity-php-extension",
+  "version": "1.0.0",
+  "description": "PHP syntax highlighting extension bundle for Google Antigravity 2.0 on Windows",
+  "main": "phpHighlighting.js",
+  "scripts": {
+    "test": "node test-suite.js"
+  },
+  "keywords": [
+    "antigravity",
+    "php",
+    "syntax-highlighting",
+    "electron",
+    "asar",
+    "prismjs"
+  ],
+  "author": "Umang Kathiyara <umangnine@gmail.com>",
+  "license": "MIT",
+  "type": "commonjs",
+  "dependencies": {
+    "@electron/asar": "^4.3.1"
+  }
+}
